@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محول الـ PDF إلى صور (متقدّم)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Language Toggle Button -->
+    <button id="langToggle" class="lang-toggle-btn" title="Switch Language">
+        <i class="fa-solid fa-globe"></i>
+        <span data-i18n="langBtn">EN</span>
+    </button>
+
+    <main class="glass-container">
+        <header>
+            <h1><i class="fa-solid fa-file-pdf"></i> <span data-i18n="title">محوّل PDF إلى صور</span></h1>
+            <p data-i18n="subtitle">حوّل ملفاتك بكل سهولة وسرعة، وبخصوصية تامة (يتم التحويل داخل متصفحك).</p>
+        </header>
+
+        <!-- Mode Switcher Tabs -->
+        <div class="mode-tabs">
+            <button id="modePdfToImg" class="mode-tab active" data-mode="pdf-to-img">
+                <i class="fa-solid fa-file-pdf"></i>
+                <span data-i18n="modePdfToImg">PDF → صور</span>
+            </button>
+            <button id="modeImgToPdf" class="mode-tab" data-mode="img-to-pdf">
+                <i class="fa-solid fa-images"></i>
+                <span data-i18n="modeImgToPdf">صور → PDF</span>
+            </button>
+        </div>
+
+        <!-- ==================== PDF TO IMAGE MODE ==================== -->
+        <div id="pdfToImgMode" class="mode-content active">
+            <section class="controls-section">
+                <div class="control-group">
+                    <label for="outputFormat" data-i18n="formatLabel">صيغة الصورة:</label>
+                    <select id="outputFormat" class="glass-input">
+                        <option value="image/png" data-i18n="formatPng">PNG (خلفية شفافة / جودة عالية)</option>
+                        <option value="image/jpeg" data-i18n="formatJpg">JPEG (حجم أصغر)</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="quality" data-i18n="qualityLabel">جودة الصورة:</label>
+                    <input type="range" id="quality" min="0.1" max="1.0" step="0.1" value="0.9" class="glass-slider">
+                    <span id="qualityValue">90%</span>
+                </div>
+                
+                <div class="control-group">
+                    <label for="scale" data-i18n="scaleLabel">الدقة (التكبير):</label>
+                    <select id="scale" class="glass-input">
+                        <option value="1" data-i18n="scale1">عادية (1x)</option>
+                        <option value="1.5" data-i18n="scale15">جيدة (1.5x)</option>
+                        <option value="2" selected data-i18n="scale2">عالية (2x) - يُنصح بها</option>
+                        <option value="3" data-i18n="scale3">ممتازة (3x)</option>
+                    </select>
+                </div>
+            </section>
+
+            <section class="upload-section">
+                <div id="dropZone" class="drop-zone">
+                    <div class="drop-zone-content">
+                        <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                        <h3 data-i18n="dropTitle">اسحب وأفلت ملف الـ PDF هنا</h3>
+                        <p data-i18n="dropOr">أو</p>
+                        <label for="pdfInput" class="btn primary-btn" data-i18n="chooseFile">اختر ملفاً</label>
+                        <input type="file" id="pdfInput" accept="application/pdf" hidden>
+                    </div>
+                </div>
+            </section>
+
+            <section id="processingSection" class="processing-section hidden">
+                <div class="loader">
+                    <div class="spinner"></div>
+                    <p id="processingText" data-i18n="processing">جاري المعالجة... يرجى الانتظار</p>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="resultsSection" class="results-section hidden">
+                <div class="results-header">
+                    <h2><i class="fa-solid fa-images"></i> <span data-i18n="extractedPages">الصفحات المستخرجة</span> (<span id="pageCount">0</span>)</h2>
+                    <div class="actions">
+                        <button id="downloadZipBtn" class="btn secondary-btn">
+                            <i class="fa-solid fa-file-zipper"></i> <span data-i18n="downloadZip">تحميل الكل (ZIP)</span>
+                        </button>
+                        <button id="resetBtn" class="btn danger-btn">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> <span data-i18n="newFile">ملف جديد</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="imageGrid" class="image-grid">
+                    <!-- الصور ستضاف هنا بواسطة الجافاسكربت -->
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== IMAGE TO PDF MODE ==================== -->
+        <div id="imgToPdfMode" class="mode-content">
+            <section class="controls-section">
+                <div class="control-group">
+                    <label for="pdfPageSize" data-i18n="pageSizeLabel">حجم الصفحة:</label>
+                    <select id="pdfPageSize" class="glass-input">
+                        <option value="a4" selected>A4</option>
+                        <option value="letter">Letter</option>
+                        <option value="fit" data-i18n="pageFit">مطابق للصورة</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="pdfOrientation" data-i18n="orientationLabel">الاتجاه:</label>
+                    <select id="pdfOrientation" class="glass-input">
+                        <option value="portrait" data-i18n="portrait">عمودي (Portrait)</option>
+                        <option value="landscape" data-i18n="landscape">أفقي (Landscape)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="pdfMargin" data-i18n="marginLabel">الهوامش:</label>
+                    <select id="pdfMargin" class="glass-input">
+                        <option value="0" data-i18n="noMargin">بدون هوامش</option>
+                        <option value="10" selected data-i18n="smallMargin">صغيرة (10px)</option>
+                        <option value="20" data-i18n="mediumMargin">متوسطة (20px)</option>
+                    </select>
+                </div>
+            </section>
+
+            <section class="upload-section" id="imgUploadSection">
+                <div id="imgDropZone" class="drop-zone">
+                    <div class="drop-zone-content">
+                        <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                        <h3 data-i18n="dropImgTitle">اسحب وأفلت الصور هنا</h3>
+                        <p data-i18n="dropOr">أو</p>
+                        <label for="imgInput" class="btn primary-btn" data-i18n="chooseImages">اختر صوراً</label>
+                        <input type="file" id="imgInput" accept="image/*" multiple hidden>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Image Preview Grid -->
+            <section id="imgPreviewSection" class="img-preview-section hidden">
+                <div class="results-header">
+                    <h2><i class="fa-solid fa-layer-group"></i> <span data-i18n="selectedImages">الصور المختارة</span> (<span id="imgCount">0</span>)</h2>
+                    <div class="actions">
+                        <label for="imgInputMore" class="btn primary-btn" style="cursor:pointer;">
+                            <i class="fa-solid fa-plus"></i> <span data-i18n="addMore">إضافة المزيد</span>
+                        </label>
+                        <input type="file" id="imgInputMore" accept="image/*" multiple hidden>
+                        <button id="convertToPdfBtn" class="btn secondary-btn">
+                            <i class="fa-solid fa-file-pdf"></i> <span data-i18n="convertToPdf">تحويل إلى PDF</span>
+                        </button>
+                        <button id="resetImgBtn" class="btn danger-btn">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> <span data-i18n="reset">إعادة ضبط</span>
+                        </button>
+                    </div>
+                </div>
+                <p class="hint-text" data-i18n="reorderHint">💡 يمكنك حذف الصور بالضغط على زر ✕</p>
+                <div id="imgPreviewGrid" class="image-grid">
+                    <!-- الصور المختارة ستظهر هنا -->
+                </div>
+            </section>
+
+            <!-- Processing for IMG to PDF -->
+            <section id="imgProcessingSection" class="processing-section hidden">
+                <div class="loader">
+                    <div class="spinner"></div>
+                    <p id="imgProcessingText" data-i18n="creatingPdf">جاري إنشاء ملف PDF...</p>
+                </div>
+            </section>
+
+            <!-- Result for IMG to PDF -->
+            <section id="imgResultSection" class="results-section hidden">
+                <div class="results-header">
+                    <h2><i class="fa-solid fa-check-circle"></i> <span data-i18n="pdfReady">ملف PDF جاهز!</span></h2>
+                    <div class="actions">
+                        <button id="downloadPdfBtn" class="btn secondary-btn">
+                            <i class="fa-solid fa-download"></i> <span data-i18n="downloadPdf">تحميل PDF</span>
+                        </button>
+                        <button id="resetImgResultBtn" class="btn danger-btn">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> <span data-i18n="newConversion">تحويل جديد</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- External Libraries -->
+    <!-- PDF.js for parsing PDF files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    
+    <!-- JSZip for zipping files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- jsPDF for creating PDF from images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Custom Script -->
+    <script src="script.js"></script>
+</body>
+</html>
